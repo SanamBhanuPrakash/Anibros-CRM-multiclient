@@ -77,26 +77,26 @@ final class Sql
         if (preg_match('/\b(?:FROM|JOIN|UPDATE)\s+[a-z_][a-z0-9_]*(?:\s+(?:AS\s+)?(?!(?:ON|WHERE|SET|USING|LEFT|RIGHT|INNER|CROSS|JOIN|GROUP|ORDER|LIMIT|HAVING|UNION|FOR|VALUES|SELECT)\b)[a-z_][a-z0-9_]*)?\s*,/i', $s)) {
             throw new \LogicException('Comma joins are not allowed in scoped SQL (use explicit JOIN): ' . substr(trim($s), 0, 120));
         }
-        $s = preg_replace_callback(
-            '/\b(UPDATE|INSERT\s+(?:IGNORE\s+)?INTO|DELETE\s+FROM|FROM|JOIN)(\s+)([a-z_][a-z0-9_]*)\b(?!\s*\()/i',
-            static function (array $m) use ($mode): string {
-                $kw = strtoupper(preg_replace('/\s+/', ' ', $m[1]));
-                $table = strtolower($m[3]);
-                if ($table === 'dual') return $m[0];
-                $write = in_array($kw, ['UPDATE', 'INSERT INTO', 'INSERT IGNORE INTO', 'DELETE FROM'], true);
-                if (Schema::isTenant($table)) {
-                    if ($mode === 'user') throw new \LogicException("Table $table is a workspace table and needs a workspace context (Db::tenant)");
-                    // jobs: a workspace may queue platform jobs (mail has no workspace) but only ever reads its own
-                    return $m[1] . $m[2] . (($write && $table === 'jobs') ? 'w_' : 'v_') . $table;
-                }
-                if (in_array($table, Schema::IDENTITY_V, true)) {
-                    $view = ($write && in_array($table, Schema::WRITE_VIEWS, true)) ? 'w_' : 'v_';
-                    return $m[1] . $m[2] . $view . $table;
-                }
-                throw new \LogicException("Table $table is not available in a scoped context (identity or system tables need Db::identity() / Db::system())");
-            },
-            $s
-        );
+        $rewrite = static function (array $m) use ($mode): string {
+            $kw = strtoupper(preg_replace('/\s+/', ' ', $m[1]));
+            $table = strtolower($m[3]);
+            if ($table === 'dual') return $m[0];
+            $write = in_array($kw, ['UPDATE', 'INSERT INTO', 'INSERT IGNORE INTO', 'DELETE FROM'], true);
+            if (Schema::isTenant($table)) {
+                if ($mode === 'user') throw new \LogicException("Table $table is a workspace table and needs a workspace context (Db::tenant)");
+                // jobs: a workspace may queue platform jobs (mail has no workspace) but only ever reads its own
+                return $m[1] . $m[2] . (($write && in_array($table, ['jobs', 'system_health'], true)) ? 'w_' : 'v_') . $table;
+            }
+            if (in_array($table, Schema::IDENTITY_V, true)) {
+                $view = ($write && in_array($table, Schema::WRITE_VIEWS, true)) ? 'w_' : 'v_';
+                return $m[1] . $m[2] . $view . $table;
+            }
+            throw new \LogicException("Table $table is not available in a scoped context (identity or system tables need Db::identity() / Db::system())");
+        };
+        // INSERT column lists follow the table name with "(", unlike table-valued functions in FROM/JOIN.
+        // Keep the function guard for reads while always routing inserts through the scoped write view.
+        $s = preg_replace_callback('/\b(INSERT\s+(?:IGNORE\s+)?INTO)(\s+)([a-z_][a-z0-9_]*)\b/i', $rewrite, $s);
+        $s = preg_replace_callback('/\b(UPDATE|DELETE\s+FROM|FROM|JOIN)(\s+)([a-z_][a-z0-9_]*)\b(?!\s*\()/i', $rewrite, $s);
         $s = str_replace(['ON__DUP__KEY__UPD', 'FOR__UPD'], ['ON DUPLICATE KEY UPDATE', 'FOR UPDATE'], $s);
         return $s;
     }
@@ -123,14 +123,18 @@ final class Db
             ? 'mysql:unix_socket=' . $c['socket'] . ';dbname=' . $c['name'] . ';charset=utf8mb4'
             : 'mysql:host=' . $c['host'] . ';port=' . $c['port'] . ';dbname=' . $c['name'] . ';charset=utf8mb4';
         try {
-            self::$pdo = new PDO($dsn, (string) $c['user'], (string) $c['pass'], [
+            $pdo = new PDO($dsn, (string) $c['user'], (string) $c['pass'], [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => true,
+                PDO::ATTR_EMULATE_PREPARES => false,
                 PDO::ATTR_STRINGIFY_FETCHES => false,
                 PDO::ATTR_TIMEOUT => 5,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci, time_zone = '+00:00', SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED, sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
             ]);
+            $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+            $pdo->exec("SET time_zone = '+00:00'");
+            $pdo->exec("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED");
+            $pdo->exec("SET sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+            self::$pdo = $pdo;
         } catch (PDOException $e) {
             Logger::error('Database connection failed', ['error' => $e->getMessage()]);
             throw Errors::dependencyUnavailable('The database is not reachable');

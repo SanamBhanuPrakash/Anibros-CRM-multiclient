@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="anibros-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b62ea"/>
+      <stop offset="100%" stop-color="#09906d"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#anibros-grad)"/>
+  <path d="M16 6L7 24H11.5L13.3 20H18.7L20.5 24H25L16 6ZM16 11.2L17.7 16H14.3L16 11.2Z" fill="#ffffff"/>
+</svg>

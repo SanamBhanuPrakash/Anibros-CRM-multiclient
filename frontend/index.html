@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Anibros Design CRM</title>
+    <meta name="description" content="Every client's leads, calls and results in one place, with a separate workspace for each client." />
+    <meta name="theme-color" content="#F7F8FA" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0E1014" media="(prefers-color-scheme: dark)" />
+
+    <!-- Apply the saved colour scheme before first paint (no light→dark flash). Fonts are self-hosted via Fontsource. -->
+    <script>
+      try {
+        var m = localStorage.getItem('mui-mode') || 'system';
+        var dark = m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-color-scheme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    </script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Anibros Design CRM" />
+    <meta property="og:description" content="Leads, calls and results for every client." />
+    <meta property="og:image" content="/favicon.svg" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <noscript>Anibros Design CRM needs JavaScript to run.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

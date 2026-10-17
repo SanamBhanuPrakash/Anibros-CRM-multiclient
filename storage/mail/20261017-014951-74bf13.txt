@@ -1,0 +1,5 @@
+To: agency-invite-ea22d913ae41@example.invalid
+Subject: Workflow Test alpha invited you to Workflow Test Agency alpha on Anibros CRM
+
+Workflow Test alpha invited you to Workflow Test Agency alpha on Anibros CRM (valid 7 days):
+http://localhost/Anibros-CRM-multiclient/public/accept-invite?token=xMcm_NVQNTh7B2q31R7WJfqg_H2wEBDCixum_CoEaU0

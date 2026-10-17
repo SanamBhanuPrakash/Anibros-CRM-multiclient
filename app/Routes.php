@@ -25,6 +25,13 @@ final class Routes
         \App\Modules\Deals\DealsRoutes::register();
         \App\Modules\Analytics\AnalyticsRoutes::register();
         \App\Modules\Dashboard\DashboardRoutes::register();
+        \App\Modules\Automation\AutomationRoutes::register();
+        \App\Modules\Realtime\RealtimeRoutes::register();
+        \App\Modules\Agency\AgencyRoutes::register();
+        \App\Modules\Monitor\MonitorRoutes::register();
+        \App\Modules\Inbound\InboundRoutes::register();
+        \App\Modules\Outbound\OutboundRoutes::register();
+        \App\Modules\Messaging\MessagingRoutes::register();
         // MODULES-REGISTER-MARKER (modules are appended above this line as they are ported)
     }
 }

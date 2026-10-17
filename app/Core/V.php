@@ -151,7 +151,7 @@ final class V
             'obj' => $this->parseObj($v, $path, $issues),
             'record' => $this->parseRecord($v, $path, $issues),
             'datetime' => $this->parseDatetime($v, $path, $issues),
-            'union' => $this->parseUnion($v, $path, $issues),
+            'union' => $this->parseUnion($v, $path, $issues, $omit),
             default => $v,
         };
         if (count($issues) === $before) {
@@ -262,6 +262,7 @@ final class V
         if ($this->min !== null && count($v) < $this->min) $issues[] = ['path' => $path, 'message' => "Too small: expected array to have >={$this->min} items", 'code' => 'too_small'];
         if ($this->max !== null && count($v) > $this->max) $issues[] = ['path' => $path, 'message' => "Too big: expected array to have <={$this->max} items", 'code' => 'too_big'];
         $out = [];
+        $omit = false;
         foreach ($v as $i => $x) {
             $r = $this->item->run($x, $path === '' ? (string) $i : "$path.$i", $issues, true, $omit);
             $out[] = $r;
@@ -310,12 +311,16 @@ final class V
         return $d;
     }
 
-    private function parseUnion(mixed $v, string $path, array &$issues): mixed
+    private function parseUnion(mixed $v, string $path, array &$issues, bool &$omit): mixed
     {
         foreach ($this->options as $o) {
             $local = [];
-            $r = $o->run($v, $path, $local, true, $omit);
-            if (!$local) return $r;
+            $optionOmit = false;
+            $r = $o->run($v, $path, $local, true, $optionOmit);
+            if (!$local) {
+                $omit = $optionOmit;
+                return $r;
+            }
         }
         $issues[] = ['path' => $path, 'message' => 'Invalid input', 'code' => 'invalid_union'];
         return null;

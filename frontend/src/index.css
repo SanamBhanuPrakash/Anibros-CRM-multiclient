@@ -1,0 +1,13 @@
+/*
+ * Global CSS. The design system lives in src/theme/theme.ts (MUI, CSS variables for light and dark); this file only sets the browser colour scheme
+ * and honours reduced motion for scrolling. There is no second styling system.
+ */
+html {
+  scroll-behavior: smooth;
+  color-scheme: light dark;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

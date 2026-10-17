@@ -1,0 +1,7 @@
+To: test_owner_alpha@anibros.local
+Subject: Verify your email — Anibros CRM
+
+Hi Alex Mercer,
+
+Confirm your email to activate your Anibros CRM workspace (link valid 24 hours):
+http://localhost/Anibros-CRM-multiclient/public/verify-email?token=xYPhAakK4iIw9WPT1P8rsUl5DA_M4l7Ib9V97eYlKno

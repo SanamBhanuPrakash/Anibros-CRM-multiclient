@@ -37,8 +37,11 @@ final class Views
         $s[] = "CREATE FUNCTION app_user_visible(u $id) RETURNS TINYINT(1) READS SQL DATA RETURN (u = app_user() OR EXISTS (SELECT 1 FROM tenant_memberships m WHERE m.user_id = u AND m.tenant_id = app_tenant()) OR (app_user() IS NOT NULL AND EXISTS (SELECT 1 FROM tenant_memberships a JOIN tenant_memberships b ON b.tenant_id = a.tenant_id WHERE a.user_id = u AND b.user_id = app_user() AND b.status = 'active' AND b.is_active = 1)))";
 
         foreach (Schema::TENANT as $t) {
+            if ($t === 'system_health') continue;
             $s[] = "CREATE OR REPLACE VIEW v_$t AS SELECT * FROM $t WHERE tenant_id = app_tenant() WITH CASCADED CHECK OPTION";
         }
+        $s[] = "CREATE OR REPLACE VIEW v_system_health AS SELECT * FROM system_health WHERE tenant_id = app_tenant() OR (tenant_id IS NULL AND component = 'worker')";
+        $s[] = "CREATE OR REPLACE VIEW w_system_health AS SELECT * FROM system_health WHERE tenant_id = app_tenant() WITH CASCADED CHECK OPTION";
         // A workspace may queue platform jobs (a mail has no workspace) but only ever reads its own
         $s[] = 'CREATE OR REPLACE VIEW w_jobs AS SELECT * FROM jobs WHERE tenant_id = app_tenant() OR tenant_id IS NULL WITH CASCADED CHECK OPTION';
 

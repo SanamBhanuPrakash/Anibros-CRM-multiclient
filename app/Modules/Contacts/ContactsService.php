@@ -27,8 +27,8 @@ final class ContactsService
 
     private const COLUMNS = "c.id, c.first_name AS firstName, c.last_name AS lastName, c.display_name AS displayName, c.email, c.phone, c.company,
         c.job_title AS jobTitle, c.city, c.owner_id AS ownerId, c.tags, c.custom_fields AS customFields, c.version, c.created_at AS createdAt, c.updated_at AS updatedAt,
-        (SELECT GROUP_CONCAT(i.value ORDER BY i.created_at, i.id SEPARATOR CHAR(10)) FROM contact_identifiers i WHERE i.contact_id = c.id AND i.kind = 'email' AND i.is_primary = 0 AND i.released_at IS NULL) AS alternateEmails,
-        (SELECT GROUP_CONCAT(i.value ORDER BY i.created_at, i.id SEPARATOR CHAR(10)) FROM contact_identifiers i WHERE i.contact_id = c.id AND i.kind = 'phone' AND i.is_primary = 0 AND i.released_at IS NULL) AS alternatePhones,
+        (SELECT GROUP_CONCAT(i.value ORDER BY i.created_at, i.id SEPARATOR 0x0A) FROM contact_identifiers i WHERE i.contact_id = c.id AND i.kind = 'email' AND i.is_primary = 0 AND i.released_at IS NULL) AS alternateEmails,
+        (SELECT GROUP_CONCAT(i.value ORDER BY i.created_at, i.id SEPARATOR 0x0A) FROM contact_identifiers i WHERE i.contact_id = c.id AND i.kind = 'phone' AND i.is_primary = 0 AND i.released_at IS NULL) AS alternatePhones,
         (SELECT COUNT(*) FROM leads l WHERE l.contact_id = c.id AND l.tenant_id = c.tenant_id AND l.deleted_at IS NULL) AS leadCount";
 
     /** @param array<string,mixed> $r @return array<string,mixed> */

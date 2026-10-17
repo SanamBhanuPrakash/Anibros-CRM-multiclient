@@ -1,0 +1,127 @@
+{
+  "source": "D:\\work\\Xampp\\htdocs\\Anibrosdesign-CRM",
+  "target": "D:\\work\\Xampp\\htdocs\\Anibros-CRM-multiclient",
+  "contract": "docs/EXECUTION_CONTRACT_2026-10-17.md",
+  "status_note": "Checklist tracks work and evidence; no section implies full parity merely by having a PHP file or route.",
+  "requirements": [
+    {
+      "section": 1,
+      "title": "Project identity — verify before editing",
+      "status": "verified",
+      "evidence": ["source and target directory existence", "PHP 8.2 runtime path", "target worktree status inspected"]
+    },
+    {
+      "section": 2,
+      "title": "First requirement: ingest the entire instruction",
+      "status": "captured",
+      "evidence": ["full 615-line contract copied and SHA-256 compared", "this traceability checklist", "session checkpoint pending update"]
+    },
+    {
+      "section": 3,
+      "title": "Absolute product requirements",
+      "status": "in_progress",
+      "evidence": ["docs/MIGRATION_PARITY.md", "source-to-target module and role coverage remains outstanding"]
+    },
+    {
+      "section": 4,
+      "title": "Preserve the original UI",
+      "status": "in_progress",
+      "evidence": ["React source git worktree clean at initial inspection", "existing compiled React SPA served from PHP target retained its UI; call logging worked, and native Playwright saved the CSV browser download to disk without source/UI edits; visual comparison across routes remains outstanding"]
+    },
+    {
+      "section": 5,
+      "title": "Original architecture is the authority",
+      "status": "in_progress",
+      "evidence": ["source architecture and API inventory reconciliation outstanding"]
+    },
+    {
+      "section": 6,
+      "title": "Meta, Google, webhooks, website forms, and chatbot",
+      "status": "in_progress",
+      "evidence": ["tests/inbound_contract.php verifies Meta/Google extraction, HMAC, generic signature ordering and chatbot turn normalization; it passed after adding receiver persistence timing instrumentation", "tests/database_workflows.php verifies Meta mocks, Google key authentication/redaction/idempotency/lead creation, and end-to-end website chatbot transcript persistence", "isolated MariaDB schema anibros_crm_feature_tests_20261017_asyncworker1: actual website receipt persisted event+job before HTTP 200; actual bin/worker.php ran at the next minute boundary, claimed the job, created a tenant-scoped lead, and the unchanged React Leads page displayed it via realtime polling with 200 responses and no reload", "this single actual worker sample: receipt-to-lead-row creation 47.583 s, receipt-to-event completion 47.605 s, receipt-to-browser visibility 52.888 s; internal event/job persistence duration 9.72 ms. The approximately 47 s queue delay demonstrates the minute-cron latency limit, not a seconds-level guarantee", "two concurrent identical receipts persisted exactly one event/job/lead; an expired final lease was recovered to a visible failed state by the worker and the authenticated retry route plus a second worker run produced the lead", "twelve concurrent website posts: eight were accepted, four explicitly rejected with HTTP 429; two simultaneous actual CLI workers claimed 5 and 3 jobs and created eight distinct leads exactly once; all eight were visible on the live-polling browser page", "live Meta/Google credentials, installed OS/cPanel cron behavior, production opportunistic pumping and full provider/role/UI workflows remain unverified"]
+    },
+    {
+      "section": 7,
+      "title": "Reliability and event processing",
+      "status": "in_progress",
+      "evidence": ["tests/database_workflows.php verifies durable signed inbound processing, Meta/WhatsApp mock retries/failures and signed outbound HTTP 503-to-200 retry; worker interruption recovery is also covered by an expired-lease MariaDB workflow assertion", "actual bin/worker.php test on isolated MariaDB reaped an expired final-attempt lease to dead and reconciliation marked the linked inbound event failed; API retry plus actual worker run recovered the event into one lead", "two parallel bin/worker.php processes started 21 ms apart claimed disjoint batches of five and three inbound jobs; all eight events reached created with one lead each and the Leads UI reflected them", "actual bin/worker.php signed local outbound delivery observed HTTP 503, emitted retry logging and left the delivery/job discoverably failed/queued; after local endpoint recovery and due-time advance, the next worker delivered HTTP 200 on attempt two", "the original React/Node Vitest suite passed 897 tests across 46 files on the isolated UTF-8 PostgreSQL test cluster", "five earlier synthetic inbound receipt-to-processing observations in isolated MariaDB measured p50 96 ms, p95/p99 848 ms; too small and mock-driven for production/SLO conclusions", "the scheduled-worker/browser sample at a minute boundary measured 47.583 s receipt-to-lead persistence and 52.888 s receipt-to-browser; cPanel cron/deployment remains unverified and cron alone cannot guarantee delivery within seconds"]
+    },
+    {
+      "section": 8,
+      "title": "Core CRM and agency functionality",
+      "status": "in_progress",
+      "evidence": ["docs/MIGRATION_PARITY.md", "tests/database_workflows.php covers a subset of agency, lead, messaging, chatbot, export, and isolation behavior", "browser call log saved and refreshed to one call; Playwright saved and inspected the downloaded CSV; tests/agency_assignment_contract.php verifies omission-preserves versus explicit-null-reset work-channel semantics in a rolled-back MariaDB fixture", "authenticated browser testing found and fixed agency/staff HTTP 500 caused by reading workspace tenant_invitations through Db::asUser; fresh-schema database workflow assertion and browser Team table/invitation rendering pass; nine auth/agency/realtime API requests returned HTTP 200", "isolated MariaDB workflow asserts ContactsService::list returns alternate-identifier arrays; authenticated browser Contacts API returned HTTP 200 with four records and no load error", "browser sweep rendered 20 owner client routes with no API response >=400; full agency APIs and role matrix remain outstanding"]
+    },
+    {
+      "section": 9,
+      "title": "Database and tenant security",
+      "status": "in_progress",
+      "evidence": ["tests/database_workflows.php covers selected cross-tenant reads and writes; full relationship, role, and concurrent coverage outstanding", "browser sales-agent view showed only the assigned lead, hid the Download action, and rendered the intended no-access state after a direct request for another lead (API 404)", "a synthetic sales_agent authenticated in the retained isolated schema, switched to its client tenant, saw one assigned lead, and loaded Leads and Contacts without API errors; owner login was restored and verified"]
+    },
+    {
+      "section": 10,
+      "title": "Security review",
+      "status": "not_started",
+      "evidence": ["targeted security verification required before production readiness"]
+    },
+    {
+      "section": 11,
+      "title": "cPanel production compatibility",
+      "status": "in_progress",
+      "evidence": ["Local PHP 8.2.12 has pdo_mysql, mysqli, curl, openssl, mbstring, fileinfo, and json; no shared-host cPanel account/runtime was available for deployment verification"]
+    },
+    {
+      "section": 12,
+      "title": "Autonomous testing",
+      "status": "in_progress",
+      "evidence": ["full source Vitest run passed: 46 files and 897 tests on an isolated UTF-8 PostgreSQL cluster; .env.native pointed to closed port 5642, so setup aborted before secondary fs.rmSync(undefined) teardown errors; a separate WIN1252 cluster could not apply migration 008, while UTF-8 resolved encoding", "fresh-schema PHP database workflow and provider/role contract tests passed; existing schemas were not reset or dropped"]
+    },
+    {
+      "section": 13,
+      "title": "Visual and functional parity register",
+      "status": "in_progress",
+      "evidence": ["docs/MIGRATION_PARITY.md", "browser evidence includes call save, CSV file saved to disk, sales-agent own-lead scope, hidden export control, 404 access-denied UI, 20 owner client routes rendering without API responses >=400, and a synthetic sales_agent client session with one assigned lead and no API errors on Leads or Contacts; overall register remains in_progress"]
+    },
+    {
+      "section": 14,
+      "title": "Work order — implement, test, fix, continue",
+      "status": "in_progress",
+      "evidence": ["execution follows ordered provider, browser, parity, regression work"]
+    },
+    {
+      "section": 15,
+      "title": "Autonomous decision rules",
+      "status": "active",
+      "evidence": ["no live provider calls, deployments, destructive database actions, or source-project edits authorized or performed", "agency assignment contract fixture rolled back after exercising the registered PHP route handler; only isolated test schemas were created"]
+    },
+    {
+      "section": 16,
+      "title": "Engineering quality bar",
+      "status": "in_progress",
+      "evidence": ["provider mocks and regression tests to be added before marking behavior verified"]
+    },
+    {
+      "section": 17,
+      "title": "Time and context management",
+      "status": "active",
+      "evidence": ["completed source Vitest output captured; the two temporary PostgreSQL test clusters were stopped after completion and their data directories retained"]
+    },
+    {
+      "section": 18,
+      "title": "Final acceptance criteria",
+      "status": "not_met",
+      "evidence": ["full CRM, browser, provider, security, and cPanel parity is not yet demonstrated"]
+    },
+    {
+      "section": 19,
+      "title": "Final action — start work now",
+      "status": "in_progress",
+      "evidence": ["continuing code implementation and evidence collection", "diagnosed screenshot outage as stopped port-8765 server plus prior invalid test-schema configuration; restored authenticated local UI/API access and documented startup/health-check commands in docs/MIGRATION_PARITY.md"]
+    }
+  ],
+  "current_provider_blockers": [
+    "No authorized real Meta, Google, or WhatsApp credentials/sandbox have been provided; use explicit provider-compatible local mocks and do not report live verification.",
+    "No actual shared-host cPanel runtime or authorized live Meta/Google/WhatsApp credentials were provided; local compatibility and provider mocks do not establish live deployment/provider behavior."
+  ],
+  "next_action": "Continue role-by-role and module-by-module React/API contract verification, implement the next evidenced PHP gap, then run the full available regression suite and cross-tenant tests; full parity remains unverified."
+}

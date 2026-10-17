@@ -1,0 +1,6 @@
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(?:app|bin|config|database|docs|storage|tests)(?:/|$) - [F,L]
+RewriteRule ^$ public/ [L]
+RewriteCond %{REQUEST_URI} !^/Anibros-CRM-multiclient/public/
+RewriteRule ^(.*)$ public/$1 [L]
